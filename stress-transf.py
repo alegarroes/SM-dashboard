@@ -138,16 +138,16 @@ def plot_mohrs_circle(sigma_x, sigma_y, tau_xy, theta, ax):
         if label.get_text() == "0":
             label.set_visible(False)
 
-    # ax.set_xlabel("σ")
-    # ax.set_ylabel("τ")
     ax.set_aspect("equal")
-    ax.legend(loc=8, bbox_to_anchor=(0.5, -0.15), ncols=3, frameon=False)
     # ax.set_title("Mohr’s Circle")
 
 
-# funcion para cambiar el slider si cambia el number input del angulo
-def change_slider():
-    st.session_state["slider_theta"] = st.session_state["text_theta"]
+def sync_from_text():
+    st.session_state.slider_theta = st.session_state.text_theta
+
+
+def sync_from_slider():
+    st.session_state.text_theta = st.session_state.slider_theta
 
 
 # funcion para dibujar flechas sobre el elemento
@@ -277,28 +277,35 @@ with col_data:
 
     col1, col2 = st.columns([0.7, 0.3])
 
+    if "slider_theta" not in st.session_state:
+        st.session_state["slider_theta"] = 0.0
+    if "text_theta" not in st.session_state:
+        st.session_state["text_theta"] = 0.0
+
     with col1:
         # slider para el angulo
         theta = st.slider(
             "Ángulo $\\theta$",
             min_value=-180.0,
             max_value=180.0,
-            value=0.0,
             format="%.1f°",
             step=1.0,
             key="slider_theta",
+            value=st.session_state["slider_theta"],
+            # on_change=sync_from_slider,
         )
 
+    # corregir para que acepte mas de un numero
     with col2:
         theta_text = st.number_input(
             label="Ángulo $\\theta$",
             label_visibility="hidden",
-            value=theta,
             key="text_theta",
             min_value=-180.0,
             max_value=180.0,
             step=1.0,
-            on_change=change_slider,
+            value=st.session_state["slider_theta"],
+            on_change=sync_from_text,
         )
 
     sigma_x_prime, sigma_y_prime, tau_x_y_prime = transform_stress(
@@ -324,10 +331,13 @@ with col_graphs:
     plot_mohrs_circle(sigma_x, sigma_y, tau_xy, theta, ax_mohr)
 
     # ojo que se cambia el signo del cortante para coincidir con el metodo I del Popov
-    (punto,) = ax_mohr.plot([sigma_x_prime], [-tau_x_y_prime], "bo", markersize=4)
+    (punto,) = ax_mohr.plot(
+        [sigma_x_prime], [-tau_x_y_prime], "bo", markersize=4, label="Transformado"
+    )
     ax_mohr.plot(
         [sigma_x, sigma_x_prime], [tau_xy, -tau_x_y_prime], linewidth=1.0, color="b"
     )
+    ax_mohr.legend(loc=8, bbox_to_anchor=(0.5, -0.2), ncols=2, frameon=False)
 
     st.pyplot(fig)
 
@@ -344,6 +354,13 @@ with col_graphs:
 
     # calculo de puntos del elemento cuadrado según la rotación theta
     puntos_rot = np.dot(puntos, rotmat)
+
+    # ejes que rotan
+    ejes_prima = np.array([[2, 0], [0, 0], [0, 2]])
+    ejes_prima = np.dot(ejes_prima, rotmat)
+
+    ax_square.plot(puntos_rot[:, 0], puntos_rot[:, 1])
+    ax_square.plot(ejes_prima[:, 0], ejes_prima[:, 1], color="r", linewidth="1")
 
     # draw normal stresses
     padding = 0.2
@@ -470,11 +487,12 @@ with col_graphs:
         ax_square,
     )
 
-    ax_square.plot(puntos_rot[:, 0], puntos_rot[:, 1])
     ax_square.set_aspect("equal")
     ax_square.set(xlim=(-2, 2))
     ax_square.set(ylim=(-2, 2))
-    ax_square.spines[["left", "right", "top", "bottom"]].set_visible(False)
+    ax_square.spines[["right", "top"]].set_visible(False)
+    ax_square.spines["left"].set_position("zero")
+    ax_square.spines["bottom"].set_position("zero")
     ax_square.xaxis.set_ticks([])
     ax_square.yaxis.set_ticks([])
     st.pyplot(fig2)

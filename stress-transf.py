@@ -243,11 +243,11 @@ with col_data:
         col1, col2, col3 = st.columns(3)
 
         with col1:
-            sigma_x = st.number_input("$\sigma_{x}$", value=10.0)
+            sigma_x = st.number_input("$\sigma_{x}$", value=10.0, step=1.0)
         with col2:
-            sigma_y = st.number_input("$\sigma_{y}$")
+            sigma_y = st.number_input("$\sigma_{y}$", step=1.0)
         with col3:
-            tau_xy = st.number_input("$\\tau_{xy}$", value=5.0)
+            tau_xy = st.number_input("$\\tau_{xy}$", value=5.0, step=1.0)
 
     sigma_1, sigma_2, theta_1, theta_2, tau_max, sigma_tau, theta_tau = (
         principal_stress(sigma_x, sigma_y, tau_xy)

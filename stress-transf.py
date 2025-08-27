@@ -79,11 +79,11 @@ def plot_mohrs_circle(sigma_x, sigma_y, tau_xy, theta, ax):
 
     ax.clear()
     # circulo
-    ax.plot(circle_x, circle_y, label="Mohr's Circle")
+    ax.plot(circle_x, circle_y, label="Circulo de Mohr")
     # punto A
-    ax.scatter([sigma_x], [tau_xy], color="red", label="Stress State", s=12)
+    ax.scatter([sigma_x], [tau_xy], color="red", label="Estado original", s=12)
     # centro
-    ax.scatter([center], [0], color="black", label="Stress State", s=12)
+    ax.scatter([center], [0], color="black", label="Centro", s=12)
     # radio
     ax.plot(
         [center, sigma_x],
@@ -139,15 +139,95 @@ def plot_mohrs_circle(sigma_x, sigma_y, tau_xy, theta, ax):
             label.set_visible(False)
 
     # ax.set_xlabel("σ")
-    # ax.set_ylabel("τ")S
+    # ax.set_ylabel("τ")
     ax.set_aspect("equal")
-    # ax.legend()
+    ax.legend(loc=8, bbox_to_anchor=(0.5, -0.15), ncols=3, frameon=False)
     # ax.set_title("Mohr’s Circle")
 
 
 # funcion para cambiar el slider si cambia el number input del angulo
 def change_slider():
     st.session_state["slider_theta"] = st.session_state["text_theta"]
+
+
+# funcion para dibujar flechas sobre el elemento
+def draw_stress(
+    padding, arrow_len_max, theta, x_ini, y_ini, max_stress, stress, face, type, ax
+):
+    if round(stress, 1) != 0:
+        # dibujar flechas
+        sf_arrow = arrow_len_max / max_stress
+        arrow_len = abs(stress) * sf_arrow
+
+        if type == "normal":
+            if stress > 0:
+                normal1_ini = np.array([x_ini + padding, y_ini])
+                normal1_fin = np.array([x_ini + padding + arrow_len, y_ini])
+            else:
+                normal1_ini = np.array([x_ini + padding + arrow_len, y_ini])
+                normal1_fin = np.array([x_ini + padding, y_ini])
+        elif type == "shear":
+            if face == "right" or face == "left":
+                if stress > 0:
+                    normal1_ini = np.array([x_ini + padding, y_ini - arrow_len / 2.0])
+                    normal1_fin = np.array([x_ini + padding, y_ini + arrow_len / 2.0])
+                else:
+                    normal1_ini = np.array([x_ini + padding, y_ini + arrow_len / 2.0])
+                    normal1_fin = np.array([x_ini + padding, y_ini - arrow_len / 2.0])
+            else:
+                if stress < 0:
+                    normal1_ini = np.array([x_ini + padding, y_ini - arrow_len / 2.0])
+                    normal1_fin = np.array([x_ini + padding, y_ini + arrow_len / 2.0])
+                else:
+                    normal1_ini = np.array([x_ini + padding, y_ini + arrow_len / 2.0])
+                    normal1_fin = np.array([x_ini + padding, y_ini - arrow_len / 2.0])
+
+        if face == "right":
+            theta_rad = np.radians(-theta)
+        elif face == "top":
+            theta_rad = np.radians(-theta - 90.0)
+        elif face == "left":
+            theta_rad = np.radians(-theta - 180.0)
+        elif face == "bottom":
+            theta_rad = np.radians(-theta - 270.0)
+
+        rotmat = np.array(
+            [
+                [np.cos(theta_rad), -np.sin(theta_rad)],
+                [np.sin(theta_rad), np.cos(theta_rad)],
+            ]
+        )
+
+        normal1_ini_rot = np.dot(normal1_ini, rotmat)
+        normal1_fin_rot = np.dot(normal1_fin, rotmat)
+
+        dx = normal1_fin_rot[0] - normal1_ini_rot[0]
+        dy = normal1_fin_rot[1] - normal1_ini_rot[1]
+        ax.arrow(
+            normal1_ini_rot[0],
+            normal1_ini_rot[1],
+            dx,
+            dy,
+            width=0.01,
+            head_width=0.08,
+            shape="full",
+            length_includes_head=True,
+        )
+
+        if abs(theta_rad) < np.pi / 2.0:
+            alignment = "left"
+        else:
+            alignment = "right"
+
+        ax.text(
+            normal1_fin_rot[0] + padding / 2.0,
+            normal1_fin_rot[1] + padding / 2.0,
+            f"{stress:.2f}",
+            horizontalalignment=alignment,
+        )
+
+    else:
+        pass
 
 
 ## ----- Aqui inicia el codigo del dashboard streamlit -----
@@ -261,88 +341,9 @@ with col_graphs:
             [np.sin(theta_rad), np.cos(theta_rad)],
         ]
     )
+
+    # calculo de puntos del elemento cuadrado según la rotación theta
     puntos_rot = np.dot(puntos, rotmat)
-
-    def draw_stress(
-        padding, arrow_len_max, theta, x_ini, y_ini, max_stress, stress, face, type, ax
-    ):
-        if round(stress, 1) != 0:
-            # dibujar flechas
-            sf_arrow = arrow_len_max / max_stress
-            arrow_len = abs(stress) * sf_arrow
-
-            if type == "normal":
-                if stress > 0:
-                    normal1_ini = np.array([x_ini + padding, y_ini])
-                    normal1_fin = np.array([x_ini + padding + arrow_len, y_ini])
-                else:
-                    normal1_ini = np.array([x_ini + padding + arrow_len, y_ini])
-                    normal1_fin = np.array([x_ini + padding, y_ini])
-            elif type == "shear":
-                if face == "right" or face == "left":
-                    if stress > 0:
-                        normal1_ini = np.array(
-                            [x_ini + padding, y_ini - arrow_len / 2.0]
-                        )
-                        normal1_fin = np.array(
-                            [x_ini + padding, y_ini + arrow_len / 2.0]
-                        )
-                    else:
-                        normal1_ini = np.array(
-                            [x_ini + padding, y_ini + arrow_len / 2.0]
-                        )
-                        normal1_fin = np.array(
-                            [x_ini + padding, y_ini - arrow_len / 2.0]
-                        )
-                else:
-                    if stress < 0:
-                        normal1_ini = np.array(
-                            [x_ini + padding, y_ini - arrow_len / 2.0]
-                        )
-                        normal1_fin = np.array(
-                            [x_ini + padding, y_ini + arrow_len / 2.0]
-                        )
-                    else:
-                        normal1_ini = np.array(
-                            [x_ini + padding, y_ini + arrow_len / 2.0]
-                        )
-                        normal1_fin = np.array(
-                            [x_ini + padding, y_ini - arrow_len / 2.0]
-                        )
-
-            if face == "right":
-                theta_rad = np.radians(-theta)
-            elif face == "top":
-                theta_rad = np.radians(-theta - 90.0)
-            elif face == "left":
-                theta_rad = np.radians(-theta - 180.0)
-            elif face == "bottom":
-                theta_rad = np.radians(-theta - 270.0)
-
-            rotmat = np.array(
-                [
-                    [np.cos(theta_rad), -np.sin(theta_rad)],
-                    [np.sin(theta_rad), np.cos(theta_rad)],
-                ]
-            )
-
-            normal1_ini_rot = np.dot(normal1_ini, rotmat)
-            normal1_fin_rot = np.dot(normal1_fin, rotmat)
-
-            dx = normal1_fin_rot[0] - normal1_ini_rot[0]
-            dy = normal1_fin_rot[1] - normal1_ini_rot[1]
-            ax.arrow(
-                normal1_ini_rot[0],
-                normal1_ini_rot[1],
-                dx,
-                dy,
-                width=0.01,
-                head_width=0.08,
-                shape="full",
-                length_includes_head=True,
-            )
-        else:
-            pass
 
     # draw normal stresses
     padding = 0.2

@@ -1,4 +1,4 @@
-# Aplicación para Mecánica de Sólidos
+# SolidLab
 
 Esta herramienta interactiva busca ayudar a comprender mejor conceptos de mecánica de materiales.
 En este momento, el dashboard cuenta con las siguientes aplicaciones:

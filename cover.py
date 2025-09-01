@@ -1,9 +1,11 @@
 import streamlit as st
 
-st.title("Aplicaciones para Mecánica de Sólidos")
+st.title("SolidLab")
 
 st.markdown(
     """
+    ### Herramienta interactiva para aprender conceptos de Mecánica de Sólidos  
+    
     Esta página contiene una serie de guías y aplicaciones para el cálculo de esfuerzos y deformaciones
     en materiales. Estos temas son esenciales para los cursos de Mecánica de Sólidos. 
 

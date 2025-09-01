@@ -1,6 +1,6 @@
 import streamlit as st
 
-st.title("Guias para Mecánica de Sólidos")
+st.title("Aplicaciones para Mecánica de Sólidos")
 
 st.markdown(
     """

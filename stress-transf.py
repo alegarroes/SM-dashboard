@@ -112,7 +112,7 @@ def plot_mohrs_circle(sigma_x, sigma_y, tau_xy, theta, ax):
 
     # Set axis labels manually at top and right
     ax.annotate(
-        "σ",
+        "$\sigma$",
         xy=(ax.get_xlim()[1], 0),
         xytext=(5, -15),
         textcoords="offset points",
@@ -122,7 +122,7 @@ def plot_mohrs_circle(sigma_x, sigma_y, tau_xy, theta, ax):
     )
 
     ax.annotate(
-        "τ",
+        "$\\tau$",
         xy=(0, ax.get_ylim()[1]),
         xytext=(5, 0),
         textcoords="offset points",

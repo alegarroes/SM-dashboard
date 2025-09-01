@@ -7,7 +7,9 @@ strain_transf_page = st.Page(
     "strain-transf.py", title="2. Transformación de deformaciones"
 )
 
-pg = st.navigation([cover_page, stress_transf_page, strain_transf_page])
+pg = st.navigation(
+    {"Inicio": [cover_page], "Aplicaciones": [stress_transf_page, strain_transf_page]}
+)
 pg.run()
 
 st.set_page_config(page_title="Guías para Mecánica de Sólidos 2")

@@ -112,7 +112,7 @@ def plot_mohrs_circle(sigma_x, sigma_y, tau_xy, theta, ax):
 
     # Set axis labels manually at top and right
     ax.annotate(
-        "σ",
+        "$\epsilon$",
         xy=(ax.get_xlim()[1], 0),
         xytext=(5, -15),
         textcoords="offset points",
@@ -122,7 +122,7 @@ def plot_mohrs_circle(sigma_x, sigma_y, tau_xy, theta, ax):
     )
 
     ax.annotate(
-        "τ",
+        "$\gamma/2$",
         xy=(0, ax.get_ylim()[1]),
         xytext=(5, 0),
         textcoords="offset points",
@@ -240,48 +240,55 @@ def draw_stress(
 
 ## ----- Aqui inicia el codigo del dashboard streamlit -----
 
-st.title("Transformación de esfuerzos")
-st.set_page_config(page_title="Transformación de esfuerzos", layout="wide")
+st.title("Transformación de deformaciones")
+st.set_page_config(page_title="Transformación de deformaciones", layout="wide")
 
 tmp1, col_data, col_graphs, tmp2 = st.columns([1, 20, 16, 1], width=1000)
 
 with col_data:
     with st.form("form_stresses"):
-        st.write("Ingresar los valores del estado de esfuerzos")
+        st.write("Ingresar los valores del estado de deformaciones")
         col1, col2, col3 = st.columns(3)
         with col1:
-            sigma_x = st.number_input("$\sigma_{x}$", value=10.0, step=1.0)
+            sigma_x = st.number_input(
+                "$\epsilon_{x}\space(\mu)$", value=100.0, step=10.0, format="%0f"
+            )
         with col2:
-            sigma_y = st.number_input("$\sigma_{y}$", step=1.0)
+            sigma_y = st.number_input(
+                "$\epsilon_{y}\space(\mu)$", step=10.0, format="%0f"
+            )
         with col3:
-            tau_xy = st.number_input("$\\tau_{xy}$", value=5.0, step=1.0)
+            tau_xy = st.number_input(
+                "$\gamma_{xy}\space(\mu)$", value=50.0, step=10.0, format="%0f"
+            )
         st.form_submit_button("Calcular")
 
+    # se divide tau_xy entre dos para considerar que es deformación, no esfuerzo
     sigma_1, sigma_2, theta_1, theta_2, tau_max, sigma_tau, theta_tau = (
-        principal_stress(sigma_x, sigma_y, tau_xy)
+        principal_stress(sigma_x, sigma_y, tau_xy / 2.0)
     )
 
-    # container esfuerzos principales
+    # container deformaciones principales
     with st.container(border=True):
-        st.write("Esfuerzos principales")
+        st.write("Deformaciones principales")
         col1, col2 = st.columns(2)
         with col1:
-            st.metric("$\sigma_1$", f"{sigma_1:.2f}")
-            st.metric("$\sigma_2$", f"{sigma_2:.2f}")
+            st.metric("$\epsilon_1\space(\mu)$", f"{sigma_1:.2f}")
+            st.metric("$\epsilon_2\space(\mu)$", f"{sigma_2:.2f}")
         with col2:
             st.metric("$\\theta_1$", f"{theta_1:.2f}°")
             st.metric("$\\theta_2$", f"{theta_2:.2f}°")
 
     # container cortante máximo
     with st.container(border=True):
-        st.write("Esfuerzo cortante máximo")
+        st.write("Deformación cortante máxima")
         col1, col2, col3 = st.columns(3)
         with col1:
-            st.metric("$\\tau_{max}$", f"{tau_max:.2f}")
+            st.metric("$\gamma_{max}\space(\mu)$", f"{tau_max:.2f}")
         with col2:
-            st.metric("$\sigma_\\tau$", f"{sigma_tau:.2f}")
+            st.metric("$\epsilon_\gamma\space(\mu)$", f"{sigma_tau:.2f}")
         with col3:
-            st.metric("$\\theta_\\tau$", f"{theta_tau:.2f}°")
+            st.metric("$\\theta_\gamma$", f"{theta_tau:.2f}°")
 
     col1, col2 = st.columns([0.7, 0.3])
 
@@ -317,33 +324,36 @@ with col_data:
         )
 
     sigma_x_prime, sigma_y_prime, tau_x_y_prime = transform_stress(
-        sigma_x, sigma_y, tau_xy, theta
+        sigma_x, sigma_y, tau_xy / 2.0, theta
     )
 
     # container esfuerzos en un angulo
     with st.container(border=True):
-        st.write(f"Esfuerzos en el angulo {theta:.1f}°")
+        st.write(f"Deformaciones en el angulo {theta:.1f}°")
         col1, col2, col3 = st.columns(3)
         with col1:
-            st.metric("$\sigma_{x'}$", f"{sigma_x_prime:.2f}")
+            st.metric("$\epsilon_{x'}\space(\mu)$", f"{sigma_x_prime:.2f}")
         with col2:
-            st.metric("$\sigma_{y'}$", f"{sigma_y_prime:.2f}")
+            st.metric("$\epsilon_{y'}\space(\mu)$", f"{sigma_y_prime:.2f}")
         with col3:
-            st.metric("$\\tau_{xy'}$", f"{tau_x_y_prime:.2f}")
+            st.metric("$\gamma_{xy'}\space(\mu)$", f"{tau_x_y_prime:.2f}")
 
 with col_graphs:
     fig, ax_mohr = plt.subplots()
     plt.subplots_adjust(bottom=0.25)
 
     # # Initial Mohr's Circle plot
-    plot_mohrs_circle(sigma_x, sigma_y, tau_xy, theta, ax_mohr)
+    plot_mohrs_circle(sigma_x, sigma_y, tau_xy / 2.0, theta, ax_mohr)
 
     # ojo que se cambia el signo del cortante para coincidir con el metodo I del Popov
     (punto,) = ax_mohr.plot(
         [sigma_x_prime], [-tau_x_y_prime], "bo", markersize=4, label="Transformado"
     )
     ax_mohr.plot(
-        [sigma_x, sigma_x_prime], [tau_xy, -tau_x_y_prime], linewidth=1.0, color="b"
+        [sigma_x, sigma_x_prime],
+        [tau_xy / 2.0, -tau_x_y_prime],
+        linewidth=1.0,
+        color="b",
     )
     ax_mohr.legend(loc=8, bbox_to_anchor=(0.5, -0.2), ncols=2, frameon=False)
 

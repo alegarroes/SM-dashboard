@@ -12,4 +12,4 @@ pg = st.navigation(
 )
 pg.run()
 
-st.set_page_config(page_title="Guías para Mecánica de Sólidos 2")
+st.set_page_config(page_title="Aplicaciones para Mecánica de Sólidos 2")

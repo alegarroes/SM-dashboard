@@ -6,6 +6,7 @@ from failurefunc import tresca, von_mises
 plt.rcParams["font.family"] = "monospace"
 
 st.title("Criterios de falla")
+st.set_page_config(page_title="Criterios de falla", layout=None)
 
 materiales = ["Dúctil", "Frágil - Mohr", "Frágil - Rankine"]
 

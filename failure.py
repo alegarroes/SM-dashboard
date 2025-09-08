@@ -1,14 +1,14 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import streamlit as st
-from failurefunc import tresca, von_mises
+from failurefunc import tresca, von_mises, rankine
 
 plt.rcParams["font.family"] = "monospace"
 
 st.title("Criterios de falla")
 st.set_page_config(page_title="Criterios de falla", layout=None)
 
-materiales = ["Dúctil", "Frágil - Mohr", "Frágil - Rankine"]
+materiales = ["Dúctil", "Frágil - Rankine", "Frágil - Mohr"]
 
 with st.container(border=True):
     st.write("Ingrese los valores de esfuerzos principales")
@@ -103,5 +103,51 @@ if seleccion_material == "Dúctil":
         if label.get_text() == "0":
             label.set_visible(False)
     st.pyplot(fig)
+
+elif seleccion_material == "Frágil - Rankine":
+    failure_rankine_bool, fs_rankine = rankine(sigma1, sigma2, sigma_u)
+
+    with st.container(border=True):
+        st.write("Falla y factor de seguridad")
+        cols = st.columns(2)
+        with cols[0]:
+            st.subheader("Rankine")
+        with cols[1]:
+            if failure_rankine_bool:
+                st.error("Falla!")
+            else:
+                st.success("No hay falla")
+        st.metric("$FS_{Tresca}$", f"{fs_rankine:.2f}")
+
+    surface_rankine = np.array(
+        [
+            [sigma_u, sigma_u],
+            [-sigma_u, sigma_u],
+            [-sigma_u, -sigma_u],
+            [sigma_u, -sigma_u],
+            [sigma_u, sigma_u],
+        ]
+    )
+
+    fig, ax = plt.subplots()
+    ax.plot(surface_rankine[:, 0], surface_rankine[:, 1], label="Rankine")
+    ax.plot([sigma1], [sigma2], "bo", markersize=4)
+    ax.set_aspect("equal")
+    ax.spines["left"].set_position("zero")
+    ax.spines["bottom"].set_position("zero")
+    ax.spines[["right", "top"]].set_visible(False)
+    ax.legend(loc=8, bbox_to_anchor=(0.5, -0.2), ncols=2, frameon=False)
+    ax.set_xlabel("$\sigma_1$", loc="right")
+    ax.set_ylabel("$\sigma_2$", loc="top", rotation=0)
+    # Hide tick labels at 0
+    for label in ax.get_xticklabels():
+        if label.get_text() == "0":
+            label.set_visible(False)
+
+    for label in ax.get_yticklabels():
+        if label.get_text() == "0":
+            label.set_visible(False)
+    st.pyplot(fig)
+
 else:
     st.write("En construccion...")

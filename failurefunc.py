@@ -28,3 +28,15 @@ def von_mises(sigma1, sigma2, sigma_yield):
     fs = sigma_yield / stress
 
     return failure_bool, fs
+
+
+def rankine(sigma1, sigma2, sigma_u):
+    stress = max(abs(sigma1), abs(sigma2))
+    if stress < sigma_u:
+        failure_bool = False
+    else:
+        failure_bool = True
+
+    fs = sigma_u / stress
+
+    return failure_bool, fs

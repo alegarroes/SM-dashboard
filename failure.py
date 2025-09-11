@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import streamlit as st
-from failurefunc import tresca, von_mises, rankine
+from failurefunc import tresca, von_mises, rankine, mohr, plot_mohrs_circle
 
 plt.rcParams["font.family"] = "monospace"
 
@@ -14,7 +14,7 @@ with st.container(border=True):
     st.write("Ingrese los valores de esfuerzos principales")
     col1, col2, col3 = st.columns(3)
     with col1:
-        sigma1 = st.number_input("$\sigma_{1}$", value=100.0, step=1.0)
+        sigma1 = st.number_input("$\sigma_{1}$", value=50.0, step=1.0)
     with col2:
         sigma2 = st.number_input("$\sigma_{2}$", value=100.0, step=1.0)
     with col3:
@@ -27,7 +27,7 @@ with st.container(border=True):
         with col1:
             sigma_ut = st.number_input("$\sigma_{UT}$", value=100.0, step=1.0)
         with col2:
-            sigma_uc = st.number_input("$\sigma_{UC}$", value=100.0, step=1.0)
+            sigma_uc = st.number_input("$\sigma_{UC}$", value=200.0, step=1.0)
     else:
         with col1:
             sigma_u = st.number_input("$\sigma_{U}$", value=100.0, step=1.0)
@@ -111,13 +111,12 @@ elif seleccion_material == "Frágil - Rankine":
         st.write("Falla y factor de seguridad")
         cols = st.columns(2)
         with cols[0]:
-            st.subheader("Rankine")
-        with cols[1]:
             if failure_rankine_bool:
                 st.error("Falla!")
             else:
                 st.success("No hay falla")
-        st.metric("$FS_{Tresca}$", f"{fs_rankine:.2f}")
+        with cols[1]:
+            st.metric("$FS_{Rankine}$", f"{fs_rankine:.2f}")
 
     surface_rankine = np.array(
         [
@@ -149,5 +148,69 @@ elif seleccion_material == "Frágil - Rankine":
             label.set_visible(False)
     st.pyplot(fig)
 
+elif seleccion_material == "Frágil - Mohr":
+    fig, ax = plt.subplots()
+    x_axis_label = "$\sigma$"
+    y_axis_label = "$\\tau$"
+
+    # calculo de radios y linea de envolvente.
+    r_c = sigma_uc / 2.0
+    r_t = sigma_ut / 2.0
+    cos_alpha = (r_c - r_t) / (r_c + r_t)
+    sin_alpha = 2.0 * np.sqrt(r_c * r_t) / (r_c + r_t)
+    x_line = [-r_c * (1.0 - cos_alpha), r_t * (1 + cos_alpha)]
+    y_line = [r_c * sin_alpha, r_t * sin_alpha]
+
+    failure_mohr_bool, fs_mohr = mohr(sigma1, sigma2, sigma_uc, sigma_ut)
+
+    with st.container(border=True):
+        st.write("Falla y factor de seguridad")
+        cols = st.columns(2)
+        with cols[0]:
+            if failure_mohr_bool:
+                st.error("Falla!")
+            else:
+                st.success("No hay falla")
+        with cols[1]:
+            st.metric("$FS_{Mohr}$", f"{fs_mohr:.2f}")
+
+    plot_mohrs_circle(-sigma_uc, 0, "Ensayo a compresión", ax)
+    plot_mohrs_circle(sigma_ut, 0, "Ensayo a tension", ax)
+    plot_mohrs_circle(sigma1, sigma2, "Estado de esfuerzos", ax)
+
+    # Set axis labels manually at top and right
+    ax.annotate(
+        x_axis_label,
+        xy=(ax.get_xlim()[1], 0),
+        xytext=(5, -15),
+        textcoords="offset points",
+        ha="left",
+        va="top",
+        fontsize=12,
+    )
+
+    ax.annotate(
+        y_axis_label,
+        xy=(0, ax.get_ylim()[1]),
+        xytext=(5, 0),
+        textcoords="offset points",
+        ha="left",
+        va="bottom",
+        fontsize=12,
+    )
+
+    ax.plot(
+        x_line,
+        y_line,
+        label="Envolvente de falla",
+        color="black",
+        linewidth=1.0,
+        linestyle="--",
+    )
+
+    ax.legend(loc=8, bbox_to_anchor=(0.5, -0.2), ncols=2, frameon=False)
+
+    st.pyplot(fig)
+
 else:
-    st.write("En construccion...")
+    pass

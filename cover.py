@@ -14,6 +14,7 @@ st.markdown(
     ### Aplicaciones disponibles
     - Transformación de esfuerzos y círculo de Mohr
     - Transformación de deformaciones y círculo de Mohr
+    - Criterios de falla de Tresca, von Mises, Rankine y Mohr
 
     Hecho por [Alejandro Garro Espinoza](https://www.linkedin.com/in/alejandro-garro-a7a679a8/).  
     *¿Sugerencias? [alejandro.garro@ucr.ac.cr](mailto:alejandro.garro@ucr.ac.cr).*

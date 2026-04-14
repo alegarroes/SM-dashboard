@@ -49,6 +49,9 @@ with col_data:
         principal_stress(sigma_x, sigma_y, tau_xy / 2.0)
     )
 
+    # multiplicar tau_max por dos por ser deformación
+    tau_max = tau_max * 2.0
+
     # container deformaciones principales
     with st.container(border=True):
         st.write("Deformaciones principales")
@@ -108,6 +111,9 @@ with col_data:
         sigma_x, sigma_y, tau_xy / 2.0, theta
     )
 
+    # multiplicar tau_max entre dos por ser deformación
+    tau_x_y_prime = tau_x_y_prime * 2.0
+
     # container esfuerzos en un angulo
     with st.container(border=True):
         st.write(f"Deformaciones en el angulo {theta:.1f}°")
@@ -132,11 +138,15 @@ with col_graphs:
 
     # ojo que se cambia el signo del cortante para coincidir con el metodo I del Popov
     (punto,) = ax_mohr.plot(
-        [sigma_x_prime], [-tau_x_y_prime], "bo", markersize=4, label="Transformado"
+        [sigma_x_prime],
+        [-tau_x_y_prime / 2.0],
+        "bo",
+        markersize=4,
+        label="Transformado",
     )
     ax_mohr.plot(
         [sigma_x, sigma_x_prime],
-        [tau_xy / 2.0, -tau_x_y_prime],
+        [tau_xy / 2.0, -tau_x_y_prime / 2.0],
         linewidth=1.0,
         color="b",
     )
